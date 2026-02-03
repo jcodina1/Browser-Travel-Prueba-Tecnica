@@ -1,0 +1,108 @@
+"use client";
+
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useAppDispatch } from "@/lib/redux/hooks";
+import { selectVehicle } from "@/lib/redux/slices/vehicleSlice";
+import { Vehicle } from "@/lib/types/vehicle.types";
+import Card from "../ui/Card";
+import Button from "../ui/Button";
+
+interface VehicleCardProps {
+  vehicle: Vehicle;
+  days: number;
+}
+
+export default function VehicleCard({ vehicle, days }: VehicleCardProps) {
+  const router = useRouter();
+  const dispatch = useAppDispatch();
+
+  const totalPrice = vehicle.pricePerDay * days;
+
+  const handleSelect = () => {
+    dispatch(selectVehicle(vehicle));
+    router.push("/summary");
+  };
+
+  return (
+    <Card noPadding className="flex flex-col h-full overflow-hidden hover:shadow-md transition-shadow">
+      <div className="relative w-full h-56 bg-gray-200">
+        <Image
+          src={vehicle.image}
+          alt={`${vehicle.name} - ${vehicle.category}`}
+          fill
+          className="object-cover"
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+        />
+      </div>
+
+      <div className="flex flex-col flex-1 p-6 gap-4">
+        <div>
+          <h3 className="text-xl font-bold text-[var(--color-text-primary)] mb-1">
+            {vehicle.name}
+          </h3>
+          <p className="text-sm text-[var(--color-text-secondary)]">
+            {vehicle.category}
+          </p>
+        </div>
+
+        <div className="flex items-center gap-4 text-sm text-[var(--color-text-secondary)]">
+          <div className="flex items-center gap-1.5" aria-label={`${vehicle.passengers} pasajeros`}>
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+              />
+            </svg>
+            <span>{vehicle.passengers} pasajeros</span>
+          </div>
+
+          <div className="flex items-center gap-1.5" aria-label={vehicle.transmission}>
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+              />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+              />
+            </svg>
+            <span>{vehicle.transmission}</span>
+          </div>
+        </div>
+
+        <div className="mt-auto pt-4 border-t border-[var(--color-border)] space-y-1">
+          <p className="text-sm text-[var(--color-text-secondary)]">
+            €{vehicle.pricePerDay}/día
+          </p>
+          <p className="text-2xl font-bold text-[var(--color-text-primary)]">
+            €{totalPrice} total
+          </p>
+        </div>
+
+        <Button onClick={handleSelect} variant="primary" fullWidth>
+          Seleccionar
+        </Button>
+      </div>
+    </Card>
+  );
+}
