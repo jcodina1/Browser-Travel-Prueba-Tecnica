@@ -2,7 +2,7 @@
 
 Aplicación web para renta de vehículos construida con Next.js 15, TypeScript, Redux Toolkit y Tailwind CSS v4.
 
-## 🚀 Características
+## Características
 
 - **Next.js 15** con App Router
 - **Server-Side Rendering (SSR)** en página de resultados
@@ -164,14 +164,72 @@ pnpm dev
 - La confirmación es una demostración (alert)
 - Imágenes de vehículos desde Unsplash
 
-## 🚧 Mejoras Futuras
+## 💳 Integración con Pasarela de Pago
 
-- Integración con API real
-- Persistencia de estado (localStorage)
-- Tests unitarios y de integración
-- Filtros avanzados de búsqueda
-- Sistema de autenticación
-- Historial de reservaciones
+### Estrategia de Implementación
+
+Para integrar una pasarela de pago (ej. Stripe, PayPal, Redsys) en la aplicación, se seguiría esta arquitectura:
+
+#### 1. **Backend API (Next.js API Routes)**
+- Crear endpoint `/api/payments/create-intent` que inicializa el pago en el servidor
+- Endpoint `/api/payments/confirm` para verificar el pago completado
+- Endpoint `/api/bookings` para crear la reservación tras pago exitoso
+- Almacenar claves secretas en variables de entorno (nunca en frontend)
+
+#### 2. **Redux Payment Slice**
+- Estado: `paymentStatus`, `paymentIntent`, `clientSecret`, `error`
+- Thunks asíncronos para crear intento de pago y confirmar
+- Integración con slice de vehículos para crear reservación final
+
+#### 3. **Componente de Checkout**
+- En `/summary`, reemplazar el botón "Confirmar reservación" por formulario de pago
+- Integrar SDK de la pasarela (ej. `@stripe/stripe-js` + `@stripe/react-stripe-js`)
+- Componentes: `<CardElement>`, `<PaymentForm>`, validación en tiempo real
+- Mostrar loading states durante procesamiento
+
+#### 4. **Flujo de Usuario**
+1. Usuario llega a `/summary` con vehículo seleccionado
+2. Frontend llama a `/api/payments/create-intent` (envía monto y metadata)
+3. Backend crea PaymentIntent en Stripe, devuelve `clientSecret`
+4. Usuario ingresa datos de tarjeta en componente seguro
+5. Al confirmar, frontend procesa pago con `stripe.confirmCardPayment()`
+6. Si éxito: llamar a `/api/bookings` para crear reservación en BD
+7. Redireccionar a `/confirmation` con ID de reservación
+8. Si fallo: mostrar error y permitir reintentar
+
+#### 5. **Seguridad y Cumplimiento**
+- PCI-DSS: usar elementos encriptados de la pasarela (nunca manejar datos de tarjeta)
+- HTTPS obligatorio en producción
+- Validación de montos en backend (nunca confiar en frontend)
+- Webhooks para confirmar pagos asíncronos (`/api/webhooks/stripe`)
+- Idempotencia con claves únicas por reservación
+
+#### 6. **Estructura de Archivos**
+```
+src/
+├── app/
+│   ├── api/
+│   │   ├── payments/
+│   │   │   ├── create-intent/route.ts
+│   │   │   └── confirm/route.ts
+│   │   ├── bookings/route.ts
+│   │   └── webhooks/stripe/route.ts
+│   └── confirmation/[id]/page.tsx
+├── components/features/
+│   ├── PaymentForm.tsx
+│   └── BookingSummary.tsx
+└── lib/
+    ├── redux/slices/paymentSlice.ts
+    ├── services/paymentService.ts
+    └── stripe/client.ts
+```
+
+#### 7. **Ventajas del Enfoque**
+- **Separación de responsabilidades**: lógica de pago en backend, UI en frontend
+- **Escalabilidad**: fácil cambiar de pasarela modificando solo la capa de servicio
+- **Testeable**: mock del servicio de pago en tests
+- **Seguro**: cumplimiento PCI sin manejar datos sensibles
+
 
 ## 👨‍💻 Autor
 
